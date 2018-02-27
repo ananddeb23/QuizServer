@@ -49,7 +49,19 @@ const getQuestions = () => {
   const promiseGetandFormatData = new Promise((resolve, reject) => {
     const getquestionset = rp('https://5gj1qvkc5h.execute-api.us-east-1.amazonaws.com/dev/allQuestions');
     getquestionset.then((bookdetails) => {
-      const questionsArray = JSON.parse(bookdetails).allQuestions;
+      let questionsArray = JSON.parse(bookdetails).allQuestions;
+      const finalquestionsArray = [];
+      for (let i = 0; i < questionsArray.length; i++) {
+        const obj = {
+          question: questionsArray[i].question,
+          questionId: questionsArray[i].questionId,
+          options: [questionsArray[i].option1, questionsArray[i].option2,
+            questionsArray[i].option3, questionsArray[i].option4],
+
+        };
+        finalquestionsArray.push(obj);
+      }
+      questionsArray = finalquestionsArray;
       const questionsanspromises = getpromisesquestionanswers(questionsArray);
       Promise.all(questionsanspromises).then((answersarray) => {
         const ansobj = ansobjectfromresult(answersarray, questionsArray);
@@ -75,7 +87,7 @@ module.exports = [
         if (data.length === 0) {
           getQuestions().then((msg) => {
             console.log('mas', msg);
-            response(msg).code(200);
+            response(JSON.stringify(msg)).code(201);
           }).catch(error => console.log(error.message));
           // response(datatosend).code(200);
         } else {
@@ -85,16 +97,36 @@ module.exports = [
             const obj = {
               question: data[i].question,
               questionId: data[i].questionId,
-              option1: data[i].option1,
-              option2: data[i].option2,
-              option3: data[i].option3,
-              option4: data[i].option4,
+              options: data[i].options,
+
             };
             datatosend.push(obj);
           }
           console.log(datatosend);
-          response(datatosend).code(200);
+          response(JSON.stringify(datatosend)).code(200);
         }
+      });
+    },
+  },
+  {
+    method: 'GET',
+    path: '/updateresponse/{username}/{qid}/{ans}',
+    handler: (request, response) => {
+      model.useranswers.destroy({
+        where: {
+          uname: request.params.username,
+          questionId: request.params.qid,
+        },
+      }).then((data) => {
+        model.useranswers.create(({
+          questionId: request.params.qid,
+          uname: request.params.username,
+          answer: request.params.ans,
+        })).then((data2) => {
+          response(JSON.stringify('response-updated')).code(200);
+        });
+        // console.log(datatosend);
+        // response(JSON.stringify(datatosend)).code(200);
       });
     },
   },
