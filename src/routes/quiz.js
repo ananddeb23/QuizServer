@@ -43,6 +43,52 @@ const insertquestionsAndAnswersindb = (questionsArray, ansArray) => {
   return Promise.all([promiseinsertdb1, promiseinsertdb2]);
 };
 
+const insertintoScores = (uname, score) => {
+  const promiseinsertuserscore = new Promise((resolve, reject) => {
+    model.userscores.destroy({
+      where: {
+        uname,
+
+      },
+    }).then((data) => {
+      model.userscores.create(({
+        uname,
+        score,
+
+      })).then((data2) => {
+        resolve(('response-updated')).code(200);
+      });
+    });
+  });
+
+  return promiseinsertuserscore;
+};
+const getscore = (datafromserver, datafromuser) => {
+  let score = 0;
+  console.log('dtahh', datafromserver);
+  console.log('dtahfffh', datafromuser);
+  if (datafromserver.length !== datafromuser.length) {
+    return score;
+  }
+  for (let i = 0; i < datafromserver.length; i++) {
+    const currkey = datafromserver[i].questionId;
+    for (let j = 0; j < datafromuser.length; j++) {
+      const userkey = datafromuser[j].questionId;
+      if (currkey === userkey) {
+        if (datafromserver[i].answer === datafromuser[j].answer) {
+          score += 1;
+        } else {
+          j = datafromuser.length;
+        }
+      }
+    }
+  }
+  // console.log(score);
+  return score;
+  // for(let i=0; i<datafromserver.length){
+  //   if(storeserverans[])
+  // }
+};
 
 // returns a promise which resolves when data is fetched from all source apis and the data is reformatted into the required form
 const getQuestions = () => {
@@ -110,7 +156,7 @@ module.exports = [
   },
   {
     method: 'GET',
-    path: '/updateresponse/{username}/{qid}/{ans}',
+    path: '/updateResponse/{username}/{qid}/{ans}',
     handler: (request, response) => {
       model.useranswers.destroy({
         where: {
@@ -127,6 +173,71 @@ module.exports = [
         });
         // console.log(datatosend);
         // response(JSON.stringify(datatosend)).code(200);
+      });
+    },
+  },
+  {
+    method: 'GET',
+    path: '/getPreviousReponse/{username}',
+    handler: (request, response) => {
+      model.useranswers.findAll({
+        where: {
+          uname: request.params.username,
+
+        },
+      }).then((data) => {
+        const datatosend = [];
+        for (let i = 0; i < data.length; i += 1) {
+          const obj = {
+            uname: data[i].uname,
+            questionId: data[i].questionId,
+            answer: data[i].answer,
+          };
+          datatosend.push(obj);
+        }
+
+        // console.log(datatosend);
+        response(JSON.stringify(datatosend)).code(200);
+      });
+    },
+  },
+  {
+    method: 'GET',
+    path: '/calculateScore/{username}',
+    handler: (request, response) => {
+      model.myanswers.findAll().then((data) => {
+        const datafromserver = [];
+        for (let i = 0; i < data.length; i += 1) {
+          const obj = {
+
+            questionId: data[i].questionId,
+            answer: data[i].answer,
+          };
+          datafromserver.push(obj);
+        }
+        console.log(datafromserver);
+        model.useranswers.findAll({
+          where: {
+            uname: request.params.username,
+
+          },
+        }).then((data) => {
+          const datafromuser = [];
+          for (let i = 0; i < data.length; i += 1) {
+            const obj = {
+
+              questionId: data[i].questionId,
+              answer: data[i].answer,
+            };
+            datafromuser.push(obj);
+          }
+          const score = getscore(datafromserver, datafromuser);
+          // console.log(datatosend);
+          insertintoScores(request.params.username, score).then((msg) => {
+            response(JSON.stringify(score)).code(200);
+          });
+        });
+        // console.log(datatosend);
       });
     },
   },
