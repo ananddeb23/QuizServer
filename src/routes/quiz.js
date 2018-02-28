@@ -98,11 +98,21 @@ const getQuestions = () => {
       let questionsArray = JSON.parse(bookdetails).allQuestions;
       const finalquestionsArray = [];
       for (let i = 0; i < questionsArray.length; i++) {
+        const optionsarr = []; let countobj = 0;
+        const objq = questionsArray[i];
+        for (const key in obj) {
+          if (countobj < 2) {
+            countobj += 1;
+          } else {
+            optionsarr.push(objq[key]);
+          }
+        }
         const obj = {
           question: questionsArray[i].question,
           questionId: questionsArray[i].questionId,
-          options: [questionsArray[i].option1, questionsArray[i].option2,
-            questionsArray[i].option3, questionsArray[i].option4],
+          // options: [questionsArray[i].option1, questionsArray[i].option2,
+          //   questionsArray[i].option3, questionsArray[i].option4],
+          options: optionsarr,
 
         };
         finalquestionsArray.push(obj);
