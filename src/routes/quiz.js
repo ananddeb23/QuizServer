@@ -241,6 +241,32 @@ module.exports = [
       });
     },
   },
+  {
+    method: 'GET',
+    path: '/getScores',
+    handler: (request, response) => {
+      model.userscores.findAll({
+        order: [
+          ['score', 'DESC'],
+
+        ],
+        limit: 5,
+
+      }).then((data) => {
+        const datatosend = [];
+        for (let i = 0; i < data.length; i += 1) {
+          const obj = {
+            uname: data[i].uname,
+            score: data[i].score,
+          };
+          datatosend.push(obj);
+        }
+        response(JSON.stringify(datatosend)).code(200);
+
+        // console.log(datatosend);
+      });
+    },
+  },
 
 ];
 
